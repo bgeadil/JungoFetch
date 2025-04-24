@@ -45,7 +45,11 @@
     // ✅ Vue App Side — Store clientId and open CRM tab
     if (isApp) {
         console.log("✅ CRM Fetcher: App side ready");
-        localStorage.setItem('tampermonkeyCheck', 'true');
+
+        setTimeout(() => {
+          window.postMessage({ type: 'tampermonkeyActive' }, '*');
+        }, 300);
+
         
         window.addEventListener('message', async (event) => {
             if (event.data?.type === 'storeClientId') {
