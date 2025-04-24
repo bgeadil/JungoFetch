@@ -10,16 +10,6 @@
 // @grant        unsafeWindow
 // ==/UserScript==
 
-(function () {
-    'use strict';
-
-    // ✅ Expose listener directly to page via unsafeWindow
-    unsafeWindow.addEventListener('message', function (event) {
-        if (event?.data?.type === 'tampermonkeyCheck') {
-            event.source.postMessage('tampermonkeyActive', event.origin);
-        }
-    });
-})();
 
 
 
@@ -33,6 +23,10 @@
     const isCRM = location.hostname === 'jungo2.bge.asso.fr';
     const isResultPage = location.pathname === '/libres_resultats';
     const isDetailsPage = location.pathname.includes('/libres_requete/812011');
+
+    if (isApp) {
+      localStorage.setItem('tampermonkeyCheck', 'true');
+    }
 
     // ✅ Respond to install check from app
     if (isApp || isCRM) {
