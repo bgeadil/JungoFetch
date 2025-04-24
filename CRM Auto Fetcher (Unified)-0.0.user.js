@@ -20,6 +20,24 @@
     const isResultPage = location.pathname === '/libres_resultats';
     const isDetailsPage = location.pathname.includes('/libres_requete/812011');
 
+    // ✅ Respond to install check from app
+    if (isApp || isCRM) {
+        window.addEventListener('message', (event) => {
+            if (event.data?.type === 'tampermonkeyCheck') {
+                // Only respond to allowed origins
+                const allowedOrigins = [
+                    'http://localhost',
+                    'https://preprod.bge-adil.eu',
+                    'https://info.bge-adil.eu'
+                ];
+    
+                if (allowedOrigins.includes(event.origin)) {
+                    event.source.postMessage('tampermonkeyActive', event.origin);
+                }
+            }
+        });
+    }
+
     // ✅ Vue App Side — Store clientId and open CRM tab
     if (isApp) {
         console.log("✅ CRM Fetcher: App side ready");
