@@ -24,10 +24,6 @@
     const isResultPage = location.pathname === '/libres_resultats';
     const isDetailsPage = location.pathname.includes('/libres_requete/812011');
 
-    if (isApp) {
-      localStorage.setItem('tampermonkeyCheck', 'true');
-    }
-
     // ✅ Respond to install check from app
     if (isApp || isCRM) {
         window.addEventListener('message', (event) => {
@@ -49,7 +45,8 @@
     // ✅ Vue App Side — Store clientId and open CRM tab
     if (isApp) {
         console.log("✅ CRM Fetcher: App side ready");
-
+        localStorage.setItem('tampermonkeyCheck', 'true');
+        
         window.addEventListener('message', async (event) => {
             if (event.data?.type === 'storeClientId') {
                 const clientId = event.data.clientId;
