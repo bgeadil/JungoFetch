@@ -7,22 +7,20 @@
 // @match        https://jungo2.bge.asso.fr/libres_resultats*
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @run-at       document-start
+// @grant        unsafeWindow
 // ==/UserScript==
 
-// 👇 Inject a script into the page so it can talk to the real page context
 (function () {
-    const script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.textContent = `
-        window.addEventListener('message', function(event) {
-            if (event?.data?.type === 'tampermonkeyCheck') {
-                window.postMessage('tampermonkeyActive', event.origin || '*');
-            }
-        }, false);
-    `;
-    document.documentElement.appendChild(script);
+    'use strict';
+
+    // ✅ Expose listener directly to page via unsafeWindow
+    unsafeWindow.addEventListener('message', function (event) {
+        if (event?.data?.type === 'tampermonkeyCheck') {
+            event.source.postMessage('tampermonkeyActive', event.origin);
+        }
+    });
 })();
+
 
 
 (function () {
