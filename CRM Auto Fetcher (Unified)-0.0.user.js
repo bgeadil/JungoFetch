@@ -7,7 +7,6 @@
 // @match        https://jungo2.bge.asso.fr/libres_resultats*
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @grant        unsafeWindow
 // ==/UserScript==
 
 
