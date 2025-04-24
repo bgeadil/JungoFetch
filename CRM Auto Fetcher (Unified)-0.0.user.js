@@ -12,16 +12,18 @@
 
 // 👇 Inject a script into the page so it can talk to the real page context
 (function () {
-    const bridgeScript = document.createElement('script');
-    bridgeScript.textContent = `
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.textContent = `
         window.addEventListener('message', function(event) {
-            if (event.data?.type === 'tampermonkeyCheck') {
-                window.postMessage('tampermonkeyActive', '*');
+            if (event?.data?.type === 'tampermonkeyCheck') {
+                window.postMessage('tampermonkeyActive', event.origin || '*');
             }
-        });
+        }, false);
     `;
-    document.documentElement.appendChild(bridgeScript);
+    document.documentElement.appendChild(script);
 })();
+
 
 (function () {
     'use strict';
