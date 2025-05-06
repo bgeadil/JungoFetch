@@ -9,9 +9,6 @@
 // @grant        GM_getValue
 // ==/UserScript==
 
-
-
-
 (function () {
     'use strict';
 
@@ -27,13 +24,12 @@
     if (isApp || isCRM) {
         window.addEventListener('message', (event) => {
             if (event.data?.type === 'tampermonkeyCheck') {
-                // Only respond to allowed origins
                 const allowedOrigins = [
                     'http://localhost',
                     'https://preprod.bge-adil.eu',
                     'https://info.bge-adil.eu'
                 ];
-    
+
                 if (allowedOrigins.includes(event.origin)) {
                     event.source.postMessage('tampermonkeyActive', event.origin);
                 }
@@ -46,10 +42,9 @@
         console.log("✅ CRM Fetcher: App side ready");
 
         setTimeout(() => {
-          window.postMessage({ type: 'tampermonkeyActive' }, '*');
+            window.postMessage({ type: 'tampermonkeyActive' }, '*');
         }, 300);
 
-        
         window.addEventListener('message', async (event) => {
             if (event.data?.type === 'storeClientId') {
                 const clientId = event.data.clientId;
@@ -76,7 +71,6 @@
             const button = document.querySelector('#tableaux_libres_resultats_lancer');
 
             if (input && button) {
-                // 👉 Before form is submitted: inject ID and submit
                 console.log("[CRM Fetcher] Found input, injecting ID and submitting…");
 
                 input.value = '';
@@ -88,47 +82,51 @@
                 return;
             }
 
-            // 👉 After page reload: observe and scrape the correct table
-            const observer = new MutationObserver(() => {
+            // 👉 Retry every second to detect result table
+            let attempt = 0;
+            const maxAttempts = 30; // Try for up to 30 seconds
+            const intervalId = setInterval(() => {
+                attempt++;
+
                 const tables = document.querySelectorAll('table.table.table-striped.table-hover.table-bordered');
-                const resultTable = tables[1]; // ✅ second one is the actual data table
+                const resultTable = tables[1]; // second table is the real data
 
-                if (!resultTable) return;
+                if (resultTable) {
+                    clearInterval(intervalId);
+                    console.log('[CRM Fetcher] ✅ Table found, parsing…');
 
-                observer.disconnect();
+                    const headers = [...resultTable.querySelectorAll('thead th')].map(th =>
+                        th.textContent.trim()
+                    );
 
-                const headers = [...resultTable.querySelectorAll('thead th')].map(th =>
-                    th.textContent.trim()
-                );
+                    const rows = [...resultTable.querySelectorAll('tbody tr')].map(tr => {
+                        const cells = [...tr.querySelectorAll('td')].map(td => td.textContent.trim());
+                        return headers.reduce((acc, header, i) => {
+                            acc[header] = cells[i] || '';
+                            return acc;
+                        }, {});
+                    });
 
-                const rows = [...resultTable.querySelectorAll('tbody tr')].map(tr => {
-                    const cells = [...tr.querySelectorAll('td')].map(td => td.textContent.trim());
-                    return headers.reduce((acc, header, i) => {
-                        acc[header] = cells[i] || '';
-                        return acc;
-                    }, {});
-                });
+                    console.log('[CRM Fetcher] ✅ Scraped real result table:', rows);
 
-                console.log('[CRM Fetcher] ✅ Scraped real result table:', rows);
+                    if (window.opener) {
+                        window.opener.postMessage({
+                            type: 'crmData',
+                            data: rows
+                        }, '*');
 
-                if (window.opener) {
-                    window.opener.postMessage({
-                        type: 'crmData',
-                        data: rows
-                    }, '*');
+                        console.log('[CRM Fetcher] 📤 Sent result table to opener');
+                    }
 
-                    console.log('[CRM Fetcher] 📤 Sent result table to opener');
+                    setTimeout(() => window.close(), 1000);
+                } else if (attempt >= maxAttempts) {
+                    clearInterval(intervalId);
+                    console.warn('[CRM Fetcher] ❌ Table not found after max attempts');
+                    alert('CRM Fetcher: La table de résultats n’a pas pu être trouvée après 30 secondes.');
+                } else {
+                    console.log(`[CRM Fetcher] ⏳ Attempt ${attempt}: Table not found yet...`);
                 }
-
-                setTimeout(() => window.close(), 1000);
-            });
-
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
-
-            console.log('[CRM Fetcher] ⏳ Waiting for result table to appear…');
+            }, 1000);
         })();
     }
 
