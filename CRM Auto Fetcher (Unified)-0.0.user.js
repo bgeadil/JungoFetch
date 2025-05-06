@@ -101,7 +101,7 @@
                         input.value = timeStart;
                         input.dispatchEvent(new Event('input', { bubbles: true }));
                     }
-                    if (input.value.includes('01/01/2025 08:0001/01/2025 20:00')) {
+                    if (input.value.includes('31/12/2025 08:0001/01/2025 20:00')) {
                         input.value = timeStart + timeEnd;
                         input.dispatchEvent(new Event('input', { bubbles: true }));
                     }
@@ -121,49 +121,51 @@
         })();
     }
 
-    function observeAndReturnTable() {
-        let attempt = 0;
-        const maxAttempts = 30;
-        const intervalId = setInterval(() => {
-            attempt++;
-            const tables = document.querySelectorAll('table.table.table-striped.table-hover.table-bordered');
-            const resultTable = tables[1];
+async function observeAndReturnTable() {
+    const mode = await GM_getValue('currentMode');
+    let attempt = 0;
+    const maxAttempts = 30;
+    const intervalId = setInterval(() => {
+        attempt++;
+        const tables = document.querySelectorAll('table.table.table-striped.table-hover.table-bordered');
+        const resultTable = tables[1];
 
-            if (resultTable) {
-                clearInterval(intervalId);
-                console.log('[CRM Fetcher] ✅ Table found, parsing…');
+        if (resultTable) {
+            clearInterval(intervalId);
+            console.log('[CRM Fetcher] ✅ Table found, parsing…');
 
-                const headers = [...resultTable.querySelectorAll('thead th')].map(th =>
-                    th.textContent.trim()
-                );
+            const headers = [...resultTable.querySelectorAll('thead th')].map(th =>
+                th.textContent.trim()
+            );
 
-                const rows = [...resultTable.querySelectorAll('tbody tr')].map(tr => {
-                    const cells = [...tr.querySelectorAll('td')].map(td => td.textContent.trim());
-                    return headers.reduce((acc, header, i) => {
-                        acc[header] = cells[i] || '';
-                        return acc;
-                    }, {});
-                });
+            const rows = [...resultTable.querySelectorAll('tbody tr')].map(tr => {
+                const cells = [...tr.querySelectorAll('td')].map(td => td.textContent.trim());
+                return headers.reduce((acc, header, i) => {
+                    acc[header] = cells[i] || '';
+                    return acc;
+                }, {});
+            });
 
-                console.log('[CRM Fetcher] ✅ Scraped real result table:', rows);
+            console.log(`[CRM Fetcher] ✅ Scraped ${mode} result table:`, rows);
 
-                if (window.opener) {
-                    window.opener.postMessage({
-                        type: 'crmData',
-                        data: rows
-                    }, '*');
-                    console.log('[CRM Fetcher] 📤 Sent result table to opener');
-                }
-
-                setTimeout(() => window.close(), 1000);
-            } else if (attempt >= maxAttempts) {
-                clearInterval(intervalId);
-                console.warn('[CRM Fetcher] ❌ Table not found after max attempts');
-                alert('CRM Fetcher: La table de résultats n’a pas pu être trouvée après 30 secondes.');
-            } else {
-                console.log(`[CRM Fetcher] ⏳ Attempt ${attempt}: Table not found yet...`);
+            if (window.opener) {
+                window.opener.postMessage({
+                    type: mode === 'agenda' ? 'agendaData' : 'crmData',
+                    data: rows
+                }, '*');
+                console.log(`[CRM Fetcher] 📤 Sent ${mode} result table to opener`);
             }
-        }, 1000);
-    }
+
+            setTimeout(() => window.close(), 1000);
+        } else if (attempt >= maxAttempts) {
+            clearInterval(intervalId);
+            console.warn('[CRM Fetcher] ❌ Table not found after max attempts');
+            alert('CRM Fetcher: La table de résultats n’a pas pu être trouvée après 30 secondes.');
+        } else {
+            console.log(`[CRM Fetcher] ⏳ Attempt ${attempt}: Table not found yet...`);
+        }
+    }, 1000);
+}
+
 
 })();
