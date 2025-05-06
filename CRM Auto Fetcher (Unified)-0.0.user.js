@@ -101,7 +101,7 @@
                         input.value = timeStart;
                         input.dispatchEvent(new Event('input', { bubbles: true }));
                     }
-                    if (input.value.includes('31/12/2025 08:0001/01/2025 20:00')) {
+                    if (input.value.includes('31/12/2025 20:00')) {
                         input.value = timeStart + timeEnd;
                         input.dispatchEvent(new Event('input', { bubbles: true }));
                     }
