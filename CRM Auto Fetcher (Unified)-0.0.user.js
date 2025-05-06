@@ -102,7 +102,7 @@
                         input.dispatchEvent(new Event('input', { bubbles: true }));
                     }
                     if (input.value.includes('31/12/2025 20:00')) {
-                        input.value = timeStart + timeEnd;
+                        input.value = timeEnd;
                         input.dispatchEvent(new Event('input', { bubbles: true }));
                     }
                 });
