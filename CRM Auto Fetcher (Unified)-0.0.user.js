@@ -5,8 +5,8 @@
 // @match        https://preprod.bge-adil.eu/*
 // @match        https://info.bge-adil.eu/*
 // @match        https://jungo2.bge.asso.fr/libres_resultats*
-// @match        https://jungo2.bge.asso.fr/libres_requete/1272011*
-// @match        https://jungo2.bge.asso.fr/libres_requete/812011*
+// @match        https://jungo2.bge.asso.fr/libres_requete/812011
+// @match        https://jungo2.bge.asso.fr/libres_requete/1272011
 // @grant        GM_setValue
 // @grant        GM_getValue
 // ==/UserScript==
@@ -23,15 +23,6 @@
     const isDetailsPage = location.pathname.includes('/libres_requete/812011');
     const isAgendaPage = location.pathname.includes('/libres_requete/1272011');
 
-    const getTodayDateTime = (hour = '08:00') => {
-        const today = new Date();
-        const day = String(today.getDate()).padStart(2, '0');
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const year = today.getFullYear();
-        return `${day}/${month}/${year} ${hour}`;
-    };
-
-    // ✅ Respond to install check from app
     if (isApp || isCRM) {
         window.addEventListener('message', (event) => {
             if (event.data?.type === 'tampermonkeyCheck') {
@@ -40,7 +31,6 @@
                     'https://preprod.bge-adil.eu',
                     'https://info.bge-adil.eu'
                 ];
-
                 if (allowedOrigins.includes(event.origin)) {
                     event.source.postMessage('tampermonkeyActive', event.origin);
                 }
@@ -48,7 +38,6 @@
         });
     }
 
-    // ✅ Vue App Side — Store clientId and open CRM tab
     if (isApp) {
         console.log("✅ CRM Fetcher: App side ready");
 
@@ -65,13 +54,12 @@
                 window.open('https://jungo2.bge.asso.fr/libres_requete/812011', '_blank');
             }
 
-            if (event.data?.type === 'getAgenda') {
+            if (event.data?.type === 'fetchAgenda') {
                 window.open('https://jungo2.bge.asso.fr/libres_requete/1272011', '_blank');
             }
         });
     }
 
-    // ✅ CRM Side — libres_resultats logic (form + scraping)
     if (isCRM && isResultPage) {
         console.log("✅ CRM Fetcher: libres_resultats loaded");
 
@@ -93,53 +81,48 @@
                 input.value = clientId;
                 input.dispatchEvent(new Event('input', { bubbles: true }));
 
-                button.click(); // this reloads the page
+                button.click();
                 return;
             }
 
-            waitForTableAndSend();
+            observeAndReturnTable();
         })();
     }
 
-    // ✅ CRM Side — libres_requete/1272011 logic for agenda
     if (isCRM && isAgendaPage) {
         console.log("✅ CRM Fetcher: agenda page loaded");
 
-        (async () => {
-            const startInput = [...document.querySelectorAll('input')].find(el => el.value === '01/01/2025 08:00');
-            const fullRangeInput = [...document.querySelectorAll('input')].find(el =>
-                el.value.includes('01/01/2025 08:00') && el.value.includes('01/01/2025 20:00')
-            );
-            const button = document.querySelector('#tableaux_libres_resultats_lancer');
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        const dateStr = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}`;
+        const timeStart = `${dateStr} 08:00`;
+        const timeEnd = `${dateStr} 20:00`;
 
-            const startDate = getTodayDateTime('08:00');
-            const endDate = getTodayDateTime('20:00');
-
-            if (startInput) {
-                startInput.value = startDate;
-                startInput.dispatchEvent(new Event('input', { bubbles: true }));
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            if (input.value.includes('01/01/2025 08:00')) {
+                input.value = timeStart;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
             }
-
-            if (fullRangeInput) {
-                fullRangeInput.value = `${startDate}${endDate}`;
-                fullRangeInput.dispatchEvent(new Event('input', { bubbles: true }));
+            if (input.value.includes('01/01/2025 08:0001/01/2025 20:00')) {
+                input.value = timeStart + timeEnd;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
             }
+        });
 
-            if (button) {
-                console.log("[CRM Fetcher] 🕒 Agenda input filled, launching request...");
-                button.click();
-            }
-
-            waitForTableAndSend();
-        })();
+        const button = document.querySelector('#tableaux_libres_resultats_lancer');
+        if (button) {
+            setTimeout(() => {
+                button.click(); // this redirects to /libres_resultats
+            }, 500);
+        }
     }
 
-    function waitForTableAndSend() {
+    function observeAndReturnTable() {
         let attempt = 0;
         const maxAttempts = 30;
         const intervalId = setInterval(() => {
             attempt++;
-
             const tables = document.querySelectorAll('table.table.table-striped.table-hover.table-bordered');
             const resultTable = tables[1];
 
@@ -159,7 +142,7 @@
                     }, {});
                 });
 
-                console.log('[CRM Fetcher] ✅ Scraped table:', rows);
+                console.log('[CRM Fetcher] ✅ Scraped real result table:', rows);
 
                 if (window.opener) {
                     window.opener.postMessage({
