@@ -5,8 +5,6 @@
 // @match        https://preprod.bge-adil.eu/*
 // @match        https://info.bge-adil.eu/*
 // @match        https://jungo2.bge.asso.fr/libres_resultats*
-// @match        https://jungo2.bge.asso.fr/libres_requete/812011
-// @match        https://jungo2.bge.asso.fr/libres_requete/1272011
 // @grant        GM_setValue
 // @grant        GM_getValue
 // ==/UserScript==
@@ -20,8 +18,6 @@
 
     const isCRM = location.hostname === 'jungo2.bge.asso.fr';
     const isResultPage = location.pathname === '/libres_resultats';
-    const isDetailsPage = location.pathname.includes('/libres_requete/812011');
-    const isAgendaPage = location.pathname.includes('/libres_requete/1272011');
 
     if (isApp || isCRM) {
         window.addEventListener('message', (event) => {
@@ -49,73 +45,80 @@
             if (event.data?.type === 'storeClientId') {
                 const clientId = event.data.clientId;
                 await GM_setValue('jungoClientId', clientId);
-                console.log('[CRM Fetcher] Stored client ID:', clientId);
-
+                await GM_setValue('currentMode', 'client');
+                console.log('[CRM Fetcher] Stored client ID and mode: client');
                 window.open('https://jungo2.bge.asso.fr/libres_requete/812011', '_blank');
             }
 
             if (event.data?.type === 'fetchAgenda') {
+                await GM_setValue('currentMode', 'agenda');
+                console.log('[CRM Fetcher] Mode set to: agenda');
                 window.open('https://jungo2.bge.asso.fr/libres_requete/1272011', '_blank');
             }
         });
     }
 
     if (isCRM && isResultPage) {
-        console.log("✅ CRM Fetcher: libres_resultats loaded");
+        console.log("✅ CRM Fetcher: result page loaded");
 
         (async () => {
-            const clientId = await GM_getValue('jungoClientId');
-            if (!clientId) {
-                console.warn('[CRM Fetcher] No stored client ID found.');
-                return;
+            const mode = await GM_getValue('currentMode');
+            console.log('[CRM Fetcher] Mode:', mode);
+
+            if (mode === 'client') {
+                const clientId = await GM_getValue('jungoClientId');
+                if (!clientId) {
+                    console.warn('[CRM Fetcher] No stored client ID found.');
+                    return;
+                }
+
+                const input = [...document.querySelectorAll('input')].find(el => el.value === '58849011');
+                const button = document.querySelector('#tableaux_libres_resultats_lancer');
+
+                if (input && button) {
+                    console.log("[CRM Fetcher] Injecting client ID…");
+
+                    input.value = '';
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    input.value = clientId;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+                    button.click();
+                    return;
+                }
             }
 
-            const input = [...document.querySelectorAll('input')].find(el => el.value === '58849011');
-            const button = document.querySelector('#tableaux_libres_resultats_lancer');
+            if (mode === 'agenda') {
+                const now = new Date();
+                const pad = (n) => String(n).padStart(2, '0');
+                const dateStr = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}`;
+                const timeStart = `${dateStr} 08:00`;
+                const timeEnd = `${dateStr} 20:00`;
 
-            if (input && button) {
-                console.log("[CRM Fetcher] Found input, injecting ID and submitting…");
+                const inputs = document.querySelectorAll('input');
+                inputs.forEach(input => {
+                    if (input.value.includes('01/01/2025 08:00')) {
+                        input.value = timeStart;
+                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                    if (input.value.includes('01/01/2025 08:0001/01/2025 20:00')) {
+                        input.value = timeStart + timeEnd;
+                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                });
 
-                input.value = '';
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-                input.value = clientId;
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-
-                button.click();
-                return;
+                const button = document.querySelector('#tableaux_libres_resultats_lancer');
+                if (button) {
+                    setTimeout(() => {
+                        button.click();
+                    }, 500);
+                    return;
+                }
             }
 
+            // Wait and scrape result table
             observeAndReturnTable();
         })();
-    }
-
-    if (isCRM && isAgendaPage) {
-        console.log("✅ CRM Fetcher: agenda page loaded");
-
-        const now = new Date();
-        const pad = (n) => String(n).padStart(2, '0');
-        const dateStr = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}`;
-        const timeStart = `${dateStr} 08:00`;
-        const timeEnd = `${dateStr} 20:00`;
-
-        const inputs = document.querySelectorAll('input');
-        inputs.forEach(input => {
-            if (input.value.includes('01/01/2025 08:00')) {
-                input.value = timeStart;
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-            if (input.value.includes('01/01/2025 08:0001/01/2025 20:00')) {
-                input.value = timeStart + timeEnd;
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-        });
-
-        const button = document.querySelector('#tableaux_libres_resultats_lancer');
-        if (button) {
-            setTimeout(() => {
-                button.click(); // this redirects to /libres_resultats
-            }, 500);
-        }
     }
 
     function observeAndReturnTable() {
