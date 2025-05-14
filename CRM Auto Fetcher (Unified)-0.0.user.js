@@ -21,6 +21,7 @@
     const isCRM = location.hostname === 'jungo2.bge.asso.fr';
     const isResultPage = location.pathname === '/libres_resultats';
 
+    // Message listener commun
     if (isApp || isCRM) {
         window.addEventListener('message', (event) => {
             if (event.data?.type === 'tampermonkeyCheck') {
@@ -36,6 +37,7 @@
         });
     }
 
+    // Partie Application
     if (isApp) {
         console.log("✅ CRM Fetcher: App side ready");
 
@@ -67,10 +69,10 @@
                 console.log('[CRM Fetcher] Mode set to: matrice', matriceId, username);
                 window.open(`https://jungo2.bge.asso.fr/libres_requete/${matriceId}`, '_blank');
             }
-
         });
     }
 
+    // Partie CRM résultats
     if (isCRM && isResultPage) {
         console.log("✅ CRM Fetcher: result page loaded");
 
@@ -88,7 +90,7 @@
                 const input = [...document.querySelectorAll('input')].find(el => el.value === '58849011');
                 const button = document.querySelector('#tableaux_libres_resultats_lancer');
 
-                if (button) {
+                if (input && button) {
                     console.log("[CRM Fetcher] Injecting client ID…");
 
                     input.value = '';
@@ -156,16 +158,17 @@
                 }
             }
 
-
-            // Wait and scrape result table
+            // Lancer le scraping
             observeAndReturnTable();
         })();
     }
 
+    // Fonction commune de scraping
     async function observeAndReturnTable() {
         const mode = await GM_getValue('currentMode');
         let attempt = 0;
         const maxAttempts = 30;
+
         const intervalId = setInterval(() => {
             attempt++;
             const tables = document.querySelectorAll('table.table.table-striped.table-hover.table-bordered');
@@ -197,7 +200,6 @@
                     console.log(`[CRM Fetcher] 📤 Sent ${mode} result table to opener`);
                 }
 
-                // Clean up after sending
                 GM_setValue('currentMode', null);
                 GM_setValue('agendaReady', null);
 
