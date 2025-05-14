@@ -139,8 +139,6 @@
                     console.warn('[CRM Fetcher] No username provided.');
                     return;
                 }
-
-                const input = [...document.querySelectorAll('input')].find(el => el.value === 'QUIJOUX Florent');
                 const button = document.querySelector('#tableaux_libres_resultats_lancer');
 
                 if (button) {
