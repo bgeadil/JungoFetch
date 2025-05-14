@@ -134,11 +134,6 @@
             }
 
             if (mode === 'matrice') {
-                const username = await GM_getValue('username');
-                if (!username) {
-                    console.warn('[CRM Fetcher] No username provided.');
-                    return;
-                }
                 const button = document.querySelector('#tableaux_libres_resultats_lancer');
 
                 if (button) {
