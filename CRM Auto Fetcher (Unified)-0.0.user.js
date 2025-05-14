@@ -65,7 +65,7 @@
                 await GM_setValue('matriceId', matriceId);
                 await GM_setValue('username', username);
                 console.log('[CRM Fetcher] Mode set to: matrice', matriceId, username);
-                window.open(https://jungo2.bge.asso.fr/libres_requete/${matriceId}, '_blank');
+                window.open(`https://jungo2.bge.asso.fr/libres_requete/${matriceId}`, '_blank');
             }
 
         });
