@@ -4,7 +4,9 @@
 // @match        http://localhost:*/*
 // @match        https://preprod.bge-adil.eu/*
 // @match        https://info.bge-adil.eu/*
-// @match        https://jungo2.bge.asso.fr/libres_resultats
+// @match        https://jungo2.bge.asso.fr/libres_resultats*
+// @match        https://jungo2.bge.asso.fr/libres_requete/812011
+// @match        https://jungo2.bge.asso.fr/libres_requete/1272011
 // @grant        GM_setValue
 // @grant        GM_getValue
 // ==/UserScript==
@@ -63,7 +65,7 @@
                 await GM_setValue('matriceId', matriceId);
                 await GM_setValue('username', username);
                 console.log('[CRM Fetcher] Mode set to: matrice', matriceId, username);
-                window.open(`https://jungo2.bge.asso.fr/libres_requete/${matriceId}`, '_blank');
+                window.open(https://jungo2.bge.asso.fr/libres_requete/${matriceId}, '_blank');
             }
 
         });
@@ -86,7 +88,7 @@
                 const input = [...document.querySelectorAll('input')].find(el => el.value === '58849011');
                 const button = document.querySelector('#tableaux_libres_resultats_lancer');
 
-                if (input && button) {
+                if (button) {
                     console.log("[CRM Fetcher] Injecting client ID…");
 
                     input.value = '';
@@ -104,9 +106,9 @@
                 if (!agendaReady) {
                     const now = new Date();
                     const pad = (n) => String(n).padStart(2, '0');
-                    const dateStr = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}`;
-                    const timeStart = `${dateStr} 08:00`;
-                    const timeEnd = `${dateStr} 20:00`;
+                    const dateStr = ${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()};
+                    const timeStart = ${dateStr} 08:00;
+                    const timeEnd = ${dateStr} 20:00;
 
                     const inputs = document.querySelectorAll('input');
                     inputs.forEach(input => {
@@ -135,48 +137,30 @@
                     console.warn('[CRM Fetcher] No username provided.');
                     return;
                 }
-            
-                // Trouver le SELECT multiple contenant "QUIJOUX Florent"
-                const selects = [...document.querySelectorAll('select[multiple]')];
-                const targetSelect = selects.find(select => {
-                    return [...select.options].some(opt => opt.selected && opt.text.includes('QUIJOUX Florent'));
-                });
-            
-                if (!targetSelect) {
-                    console.warn('[CRM Fetcher] No select with QUIJOUX Florent selected found.');
-                    return;
-                }
-            
-                // Trouver l'option correspondant à username
-                const optionToSelect = [...targetSelect.options].find(opt =>
-                    opt.text.trim().toLowerCase() === username.trim().toLowerCase()
-                );
-            
-                if (!optionToSelect) {
-                    console.warn(`[CRM Fetcher] Username "${username}" not found in select options.`);
-                    return;
-                }
-            
-                // Sélectionner la nouvelle valeur avec jQuery + Chosen
-                if (window.jQuery) {
-                    const $select = jQuery(targetSelect);
-                    $select.val([optionToSelect.value]); // sélectionne une seule valeur
-                    $select.trigger('chosen:updated');   // met à jour l'affichage Chosen
-                    $select.trigger('change');           // notifie tout listener de la mise à jour
-                } else {
-                    console.warn('jQuery not available. Cannot update Chosen select properly.');
-                    return;
-                }
-            
-                // Lancer la recherche
+
+                const input = [...document.querySelectorAll('input')].find(el => el.value === 'QUIJOUX Florent');
                 const button = document.querySelector('#tableaux_libres_resultats_lancer');
-                if (button) {
-                    console.log('[CRM Fetcher] Username injected and ready to launch.');
-                    setTimeout(() => button.click(), 500);
+
+                if (input && button) {
+                    console.log("[CRM Fetcher] Injecting username into matrice input…");
+
+                    input.value = '';
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    input.value = username;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+                    setTimeout(() => button.click(), 300);
+                    return;
                 } else {
-                    console.warn('[CRM Fetcher] Launch button not found.');
+                    console.warn('[CRM Fetcher] Input or button not found for matrice mode.');
                 }
             }
+
+
+            // Wait and scrape result table
+            observeAndReturnTable();
+        })();
+    }
 
     async function observeAndReturnTable() {
         const mode = await GM_getValue('currentMode');
@@ -203,14 +187,14 @@
                     }, {});
                 });
 
-                console.log(`[CRM Fetcher] ✅ Scraped ${mode} result table:`, rows);
+                console.log([CRM Fetcher] ✅ Scraped ${mode} result table:, rows);
 
                 if (window.opener) {
                     window.opener.postMessage({
                         type: mode === 'agenda' ? 'agendaData' : 'crmData',
                         data: rows
                     }, '*');
-                    console.log(`[CRM Fetcher] 📤 Sent ${mode} result table to opener`);
+                    console.log([CRM Fetcher] 📤 Sent ${mode} result table to opener);
                 }
 
                 // Clean up after sending
@@ -223,7 +207,7 @@
                 console.warn('[CRM Fetcher] ❌ Table not found after max attempts');
                 alert('CRM Fetcher: La table de résultats n’a pas pu être trouvée après 30 secondes.');
             } else {
-                console.log(`[CRM Fetcher] ⏳ Attempt ${attempt}: Table not found yet...`);
+                console.log([CRM Fetcher] ⏳ Attempt ${attempt}: Table not found yet...);
             }
         }, 1000);
     }
