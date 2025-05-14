@@ -4,9 +4,7 @@
 // @match        http://localhost:*/*
 // @match        https://preprod.bge-adil.eu/*
 // @match        https://info.bge-adil.eu/*
-// @match        https://jungo2.bge.asso.fr/libres_resultats*
-// @match        https://jungo2.bge.asso.fr/libres_requete/812011
-// @match        https://jungo2.bge.asso.fr/libres_requete/1272011
+// @match        https://jungo2.bge.asso.fr/libres_resultats
 // @grant        GM_setValue
 // @grant        GM_getValue
 // ==/UserScript==
@@ -58,6 +56,16 @@
                 console.log('[CRM Fetcher] Mode set to: agenda');
                 window.open('https://jungo2.bge.asso.fr/libres_requete/1272011', '_blank');
             }
+
+            if (event.data?.type === 'getMatrice') {
+                const { matriceId, username } = event.data;
+                await GM_setValue('currentMode', 'matrice');
+                await GM_setValue('matriceId', matriceId);
+                await GM_setValue('username', username);
+                console.log('[CRM Fetcher] Mode set to: matrice', matriceId, username);
+                window.open(`https://jungo2.bge.asso.fr/libres_requete/${matriceId}`, '_blank');
+            }
+
         });
     }
 
@@ -120,6 +128,32 @@
                     }
                 }
             }
+
+            if (mode === 'matrice') {
+                const username = await GM_getValue('username');
+                if (!username) {
+                    console.warn('[CRM Fetcher] No username provided.');
+                    return;
+                }
+
+                const input = [...document.querySelectorAll('input')].find(el => el.value === 'QUIJOUX Florent');
+                const button = document.querySelector('#tableaux_libres_resultats_lancer');
+
+                if (input && button) {
+                    console.log("[CRM Fetcher] Injecting username into matrice input…");
+
+                    input.value = '';
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    input.value = username;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+                    setTimeout(() => button.click(), 300);
+                    return;
+                } else {
+                    console.warn('[CRM Fetcher] Input or button not found for matrice mode.');
+                }
+            }
+
 
             // Wait and scrape result table
             observeAndReturnTable();
