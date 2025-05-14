@@ -135,26 +135,53 @@
                     console.warn('[CRM Fetcher] No username provided.');
                     return;
                 }
-
-                const input = [...document.querySelectorAll('input')].find(el => el.value.includes('QUIJOUX'));
-                const button = document.querySelector('#tableaux_libres_resultats_lancer');
-
-                if (input && button) {
-                    console.log("[CRM Fetcher] Injecting username into matrice input…");
-
-                    input.value = '';
-                    input.dispatchEvent(new Event('input', { bubbles: true }));
-                    input.value = username;
-                    input.dispatchEvent(new Event('input', { bubbles: true }));
-
-                    setTimeout(() => button.click(), 300);
+            
+                // Trouver le SELECT contenant "QUIJOUX Florent"
+                const selects = [...document.querySelectorAll('select[multiple]')];
+                const targetSelect = selects.find(select => {
+                    return [...select.options].some(opt => opt.selected && opt.text.includes('QUIJOUX Florent'));
+                });
+            
+                if (!targetSelect) {
+                    console.warn('[CRM Fetcher] No select with QUIJOUX Florent selected found.');
                     return;
+                }
+            
+                // Déselectionner tout
+                [...targetSelect.options].forEach(opt => opt.selected = false);
+            
+                // Rechercher l'option correspondant au username
+                const optionToSelect = [...targetSelect.options].find(opt =>
+                    opt.text.trim().toLowerCase() === username.trim().toLowerCase()
+                );
+            
+                if (!optionToSelect) {
+                    console.warn(`[CRM Fetcher] Username "${username}" not found in the select options.`);
+                    return;
+                }
+            
+                // Sélectionner l'utilisateur
+                optionToSelect.selected = true;
+            
+                // Déclencher les événements nécessaires
+                targetSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                targetSelect.dispatchEvent(new Event('input', { bubbles: true }));
+            
+                // Chosen.js met à jour le visuel avec sa propre API
+                if (window.jQuery && jQuery(targetSelect).trigger) {
+                    jQuery(targetSelect).trigger("chosen:updated");
+                }
+            
+                // Cliquer sur le bouton "lancer"
+                const button = document.querySelector('#tableaux_libres_resultats_lancer');
+                if (button) {
+                    console.log('[CRM Fetcher] Username injected and ready to launch.');
+                    setTimeout(() => button.click(), 500);
                 } else {
-                    console.warn('[CRM Fetcher] Input or button not found for matrice mode.');
+                    console.warn('[CRM Fetcher] Launch button not found.');
                 }
             }
-
-
+            
             // Wait and scrape result table
             observeAndReturnTable();
         })();
