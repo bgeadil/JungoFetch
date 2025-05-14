@@ -46,6 +46,9 @@
         window.addEventListener('message', async (event) => {
             if (event.data?.type === 'storeClientId') {
                 const clientId = event.data.clientId;
+                if(clientId == 911){
+                    clientId = 12064011;
+                }
                 await GM_setValue('jungoClientId', clientId);
                 await GM_setValue('currentMode', 'client');
                 console.log('[CRM Fetcher] Stored client ID and mode: client');
