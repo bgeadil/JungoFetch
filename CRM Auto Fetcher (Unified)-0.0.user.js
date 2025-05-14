@@ -136,11 +136,9 @@
             if (mode === 'matrice') {
                 const button = document.querySelector('#tableaux_libres_resultats_lancer');
 
-                if (button) {
-                    setTimeout(() => button.click(), 3000);
+                if (!button) {
+                    console.warn('[CRM Fetcher] Launch button not found.');
                     return;
-                } else {
-                    console.warn('[CRM Fetcher] Input or button not found for matrice mode.');
                 }
             }
 
