@@ -140,6 +140,12 @@
                     console.warn('[CRM Fetcher] Launch button not found.');
                     return;
                 }
+
+                if (button) {
+                    await GM_setValue('agendaReady', true);
+                    setTimeout(() => button.click(), 500);
+                    return;
+                }
             }
 
             // Lancer le scraping
