@@ -143,7 +143,7 @@
                 const input = [...document.querySelectorAll('input')].find(el => el.value === 'QUIJOUX Florent');
                 const button = document.querySelector('#tableaux_libres_resultats_lancer');
 
-                if (input && button) {
+                if (button) {
                     console.log("[CRM Fetcher] Injecting username into matrice input…");
 
                     input.value = '';
