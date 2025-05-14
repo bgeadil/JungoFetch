@@ -106,9 +106,9 @@
                 if (!agendaReady) {
                     const now = new Date();
                     const pad = (n) => String(n).padStart(2, '0');
-                    const dateStr = ${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()};
-                    const timeStart = ${dateStr} 08:00;
-                    const timeEnd = ${dateStr} 20:00;
+                    const dateStr = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}`;
+                    const timeStart = `${dateStr} 08:00`;
+                    const timeEnd = `${dateStr} 20:00`;
 
                     const inputs = document.querySelectorAll('input');
                     inputs.forEach(input => {
