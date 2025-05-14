@@ -142,7 +142,6 @@
                 }
 
                 if (button) {
-                    await GM_setValue('agendaReady', true);
                     setTimeout(() => button.click(), 500);
                     return;
                 }
