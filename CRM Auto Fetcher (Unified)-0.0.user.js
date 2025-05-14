@@ -137,14 +137,7 @@
                 const button = document.querySelector('#tableaux_libres_resultats_lancer');
 
                 if (button) {
-                    console.log("[CRM Fetcher] Injecting username into matrice input…");
-
-                    input.value = '';
-                    input.dispatchEvent(new Event('input', { bubbles: true }));
-                    input.value = username;
-                    input.dispatchEvent(new Event('input', { bubbles: true }));
-
-                    setTimeout(() => button.click(), 300);
+                    setTimeout(() => button.click(), 3000);
                     return;
                 } else {
                     console.warn('[CRM Fetcher] Input or button not found for matrice mode.');
