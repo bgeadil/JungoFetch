@@ -136,7 +136,7 @@
                     return;
                 }
             
-                // Trouver le SELECT contenant "QUIJOUX Florent"
+                // Trouver le SELECT multiple contenant "QUIJOUX Florent"
                 const selects = [...document.querySelectorAll('select[multiple]')];
                 const targetSelect = selects.find(select => {
                     return [...select.options].some(opt => opt.selected && opt.text.includes('QUIJOUX Florent'));
@@ -147,32 +147,28 @@
                     return;
                 }
             
-                // Déselectionner tout
-                [...targetSelect.options].forEach(opt => opt.selected = false);
-            
-                // Rechercher l'option correspondant au username
+                // Trouver l'option correspondant à username
                 const optionToSelect = [...targetSelect.options].find(opt =>
                     opt.text.trim().toLowerCase() === username.trim().toLowerCase()
                 );
             
                 if (!optionToSelect) {
-                    console.warn(`[CRM Fetcher] Username "${username}" not found in the select options.`);
+                    console.warn(`[CRM Fetcher] Username "${username}" not found in select options.`);
                     return;
                 }
             
-                // Sélectionner l'utilisateur
-                optionToSelect.selected = true;
-            
-                // Déclencher les événements nécessaires
-                targetSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                targetSelect.dispatchEvent(new Event('input', { bubbles: true }));
-            
-                // Chosen.js met à jour le visuel avec sa propre API
-                if (window.jQuery && jQuery(targetSelect).trigger) {
-                    jQuery(targetSelect).trigger("chosen:updated");
+                // Sélectionner la nouvelle valeur avec jQuery + Chosen
+                if (window.jQuery) {
+                    const $select = jQuery(targetSelect);
+                    $select.val([optionToSelect.value]); // sélectionne une seule valeur
+                    $select.trigger('chosen:updated');   // met à jour l'affichage Chosen
+                    $select.trigger('change');           // notifie tout listener de la mise à jour
+                } else {
+                    console.warn('jQuery not available. Cannot update Chosen select properly.');
+                    return;
                 }
             
-                // Cliquer sur le bouton "lancer"
+                // Lancer la recherche
                 const button = document.querySelector('#tableaux_libres_resultats_lancer');
                 if (button) {
                     console.log('[CRM Fetcher] Username injected and ready to launch.');
@@ -181,11 +177,6 @@
                     console.warn('[CRM Fetcher] Launch button not found.');
                 }
             }
-            
-            // Wait and scrape result table
-            observeAndReturnTable();
-        })();
-    }
 
     async function observeAndReturnTable() {
         const mode = await GM_getValue('currentMode');
