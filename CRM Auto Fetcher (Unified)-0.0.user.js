@@ -187,14 +187,14 @@
                     }, {});
                 });
 
-                console.log([CRM Fetcher] ✅ Scraped ${mode} result table:, rows);
+                console.log(`[CRM Fetcher] ✅ Scraped ${mode} result table:`, rows);
 
                 if (window.opener) {
                     window.opener.postMessage({
                         type: mode === 'agenda' ? 'agendaData' : 'crmData',
                         data: rows
                     }, '*');
-                    console.log([CRM Fetcher] 📤 Sent ${mode} result table to opener);
+                    console.log(`[CRM Fetcher] 📤 Sent ${mode} result table to opener`);
                 }
 
                 // Clean up after sending
@@ -207,7 +207,7 @@
                 console.warn('[CRM Fetcher] ❌ Table not found after max attempts');
                 alert('CRM Fetcher: La table de résultats n’a pas pu être trouvée après 30 secondes.');
             } else {
-                console.log([CRM Fetcher] ⏳ Attempt ${attempt}: Table not found yet...);
+                console.log(`[CRM Fetcher] ⏳ Attempt ${attempt}: Table not found yet...`);
             }
         }, 1000);
     }
