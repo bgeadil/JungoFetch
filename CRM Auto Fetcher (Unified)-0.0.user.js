@@ -31,7 +31,7 @@
                     'https://info.bge-adil.eu'
                 ];
                 if (allowedOrigins.includes(event.origin)) {
-                    event.source.postMessage('tampermonkeyActive', event.origin);
+                    event.source.postMessage({ type: 'tampermonkeyActive' }, event.origin);
                 }
             }
         });
@@ -41,9 +41,11 @@
     if (isApp) {
         console.log("✅ CRM Fetcher: App side ready");
 
-        setTimeout(() => {
+        // 🔁 Envoie périodique après chaque changement DOM (utile pour SPA)
+        const observer = new MutationObserver(() => {
             window.postMessage({ type: 'tampermonkeyActive' }, '*');
-        }, 300);
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
 
         window.addEventListener('message', async (event) => {
             if (event.data?.type === 'storeClientId') {
