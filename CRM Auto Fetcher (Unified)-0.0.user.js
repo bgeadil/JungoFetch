@@ -11,6 +11,8 @@
 // @grant        GM_getValue
 // ==/UserScript==
 
+// V 29.04.26
+
 (function () {
     'use strict';
 
@@ -60,6 +62,13 @@
                 await GM_setValue('currentMode', 'agenda');
                 await GM_setValue('agendaReady', false);
                 console.log('[CRM Fetcher] Mode set to: agenda');
+                window.open('https://jungo2.bge.asso.fr/libres_requete/1272011', '_blank');
+            }
+
+            if (event.data?.type === 'fetchAgendaTomorrow') {
+                await GM_setValue('currentMode', 'agenda_tomorrow');
+                await GM_setValue('agendaReady', false);
+                console.log('[CRM Fetcher] Mode set to: agenda_tomorrow');
                 window.open('https://jungo2.bge.asso.fr/libres_requete/1272011', '_blank');
             }
 
@@ -135,6 +144,37 @@
                 }
             }
 
+            if (mode === 'agenda_tomorrow') {
+                const agendaReady = await GM_getValue('agendaReady');
+                if (!agendaReady) {
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    const pad = (n) => String(n).padStart(2, '0');
+                    const dateStr = `${pad(tomorrow.getDate())}/${pad(tomorrow.getMonth() + 1)}/${tomorrow.getFullYear()}`;
+                    const timeStart = `${dateStr} 08:00`;
+                    const timeEnd = `${dateStr} 20:00`;
+
+                    const inputs = document.querySelectorAll('input');
+                    inputs.forEach(input => {
+                        if (input.value.includes('01/01/2025 08:00')) {
+                            input.value = timeStart;
+                            input.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                        if (input.value.includes('31/12/2025 20:00')) {
+                            input.value = timeEnd;
+                            input.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                    });
+
+                    const button = document.querySelector('#tableaux_libres_resultats_lancer');
+                    if (button) {
+                        await GM_setValue('agendaReady', true);
+                        setTimeout(() => button.click(), 500);
+                        return;
+                    }
+                }
+            }
+
             if (mode === 'matrice') {
                 const button = document.querySelector('#tableaux_libres_resultats_lancer');
 
@@ -180,7 +220,7 @@
 
                 if (window.opener) {
                     window.opener.postMessage({
-                        type: mode === 'agenda' ? 'agendaData' : 'crmData',
+                        type: mode === 'agenda' || mode === 'agenda_tomorrow' ? 'agendaData' : 'crmData',
                         data: rows
                     }, '*');
                     console.log(`[CRM Fetcher] 📤 Sent ${mode} result table to opener`);
@@ -193,7 +233,7 @@
             } else if (attempt >= maxAttempts) {
                 clearInterval(intervalId);
                 console.warn('[CRM Fetcher] ❌ Table not found after max attempts');
-                alert('CRM Fetcher: La table de résultats n’a pas pu être trouvée après 30 secondes.');
+                alert('CRM Fetcher: La table de résultats n'a pas pu être trouvée après 30 secondes.');
             } else {
                 console.log(`[CRM Fetcher] ⏳ Attempt ${attempt}: Table not found yet...`);
             }
