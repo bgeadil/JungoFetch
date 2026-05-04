@@ -233,7 +233,7 @@
             } else if (attempt >= maxAttempts) {
                 clearInterval(intervalId);
                 console.warn('[CRM Fetcher] ❌ Table not found after max attempts');
-                alert('CRM Fetcher: La table de résultats n'a pas pu être trouvée après 30 secondes.');
+                alert("CRM Fetcher: La table de résultats n'a pas pu être trouvée après 30 secondes.");
             } else {
                 console.log(`[CRM Fetcher] ⏳ Attempt ${attempt}: Table not found yet...`);
             }
